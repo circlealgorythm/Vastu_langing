@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import templeModel from '../temple.glb?url'
 
 type ModelViewerProps = {
@@ -20,6 +20,237 @@ type ModelViewerProps = {
 }
 
 const ModelViewer = 'model-viewer' as unknown as React.ComponentType<ModelViewerProps>
+
+const HOUSE_FRAME_COUNT = 180
+const houseFrameUrl = (index: number) =>
+  `/house-frames/house-${String(index + 1).padStart(4, '0')}.jpg`
+
+function ScrollScrubSequence() {
+  const sceneRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const scene = sceneRef.current
+    const canvas = canvasRef.current
+
+    if (!scene || !canvas) {
+      return undefined
+    }
+
+    const context = canvas.getContext('2d', { alpha: false })
+
+    if (!context) {
+      return undefined
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const frameCache = new Map<number, HTMLImageElement>()
+    const loadingFrames = new Set<number>()
+    let animationFrame = 0
+    let isVisible = false
+    let targetProgress = 0
+    let renderedProgress = 0
+    let renderedFrame = -1
+    let canvasWidth = 0
+    let canvasHeight = 0
+
+    const clamp = (value: number) => Math.min(Math.max(value, 0), 1)
+    const clampFrame = (index: number) => Math.min(Math.max(index, 0), HOUSE_FRAME_COUNT - 1)
+
+    const readScrollProgress = () => {
+      const rect = scene.getBoundingClientRect()
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+      const scrollableDistance = Math.max(rect.height - viewportHeight, 1)
+
+      return clamp(-rect.top / scrollableDistance)
+    }
+
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect()
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const nextWidth = Math.max(1, Math.round(rect.width * dpr))
+      const nextHeight = Math.max(1, Math.round(rect.height * dpr))
+
+      if (nextWidth !== canvasWidth || nextHeight !== canvasHeight) {
+        canvasWidth = nextWidth
+        canvasHeight = nextHeight
+        canvas.width = nextWidth
+        canvas.height = nextHeight
+        context.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+        const currentImage = frameCache.get(renderedFrame)
+
+        if (currentImage?.complete) {
+          drawImage(currentImage)
+        }
+      }
+    }
+
+    const drawImage = (image: HTMLImageElement) => {
+      const rect = canvas.getBoundingClientRect()
+      const scale = Math.max(rect.width / image.naturalWidth, rect.height / image.naturalHeight)
+      const width = image.naturalWidth * scale
+      const height = image.naturalHeight * scale
+      const x = (rect.width - width) / 2
+      const y = (rect.height - height) / 2
+
+      context.clearRect(0, 0, rect.width, rect.height)
+      context.drawImage(image, x, y, width, height)
+    }
+
+    const drawNearestLoadedFrame = (frameIndex: number) => {
+      for (let offset = 0; offset < HOUSE_FRAME_COUNT; offset += 1) {
+        const previous = frameCache.get(frameIndex - offset)
+        const next = frameCache.get(frameIndex + offset)
+
+        if (previous?.complete) {
+          drawImage(previous)
+          return
+        }
+
+        if (next?.complete) {
+          drawImage(next)
+          return
+        }
+      }
+    }
+
+    const loadFrame = (frameIndex: number) => {
+      const safeIndex = clampFrame(frameIndex)
+
+      if (frameCache.has(safeIndex) || loadingFrames.has(safeIndex)) {
+        return
+      }
+
+      loadingFrames.add(safeIndex)
+
+      const image = new Image()
+      image.decoding = 'async'
+      image.onload = () => {
+        loadingFrames.delete(safeIndex)
+        frameCache.set(safeIndex, image)
+
+        if (safeIndex === renderedFrame) {
+          drawImage(image)
+        }
+      }
+      image.onerror = () => {
+        loadingFrames.delete(safeIndex)
+      }
+      image.src = houseFrameUrl(safeIndex)
+    }
+
+    const preloadAround = (frameIndex: number) => {
+      for (let offset = -8; offset <= 12; offset += 1) {
+        loadFrame(frameIndex + offset)
+      }
+    }
+
+    const preloadAllFrames = () => {
+      for (let index = 0; index < HOUSE_FRAME_COUNT; index += 1) {
+        window.setTimeout(() => loadFrame(index), index * 12)
+      }
+    }
+
+    const renderFrame = (progress: number) => {
+      const frameIndex = clampFrame(Math.round(progress * (HOUSE_FRAME_COUNT - 1)))
+
+      preloadAround(frameIndex)
+
+      if (frameIndex !== renderedFrame) {
+        renderedFrame = frameIndex
+        const image = frameCache.get(frameIndex)
+
+        if (image?.complete) {
+          drawImage(image)
+        } else {
+          drawNearestLoadedFrame(frameIndex)
+        }
+      }
+    }
+
+    const syncFrameToScroll = () => {
+      targetProgress = readScrollProgress()
+      renderedProgress = targetProgress
+      renderFrame(renderedProgress)
+    }
+
+    const tick = () => {
+      if (!isVisible || reduceMotion.matches) {
+        animationFrame = 0
+        return
+      }
+
+      targetProgress = readScrollProgress()
+      renderedProgress += (targetProgress - renderedProgress) * 0.18
+
+      if (Math.abs(targetProgress - renderedProgress) < 0.001) {
+        renderedProgress = targetProgress
+      }
+
+      renderFrame(renderedProgress)
+      animationFrame = window.requestAnimationFrame(tick)
+    }
+
+    const startScrubbing = () => {
+      if (!animationFrame && isVisible && !reduceMotion.matches) {
+        animationFrame = window.requestAnimationFrame(tick)
+      }
+    }
+
+    const stopScrubbing = () => {
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame)
+        animationFrame = 0
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting
+
+        if (isVisible) {
+          syncFrameToScroll()
+          startScrubbing()
+        } else {
+          stopScrubbing()
+        }
+      },
+      { threshold: 0 },
+    )
+
+    const handleResize = () => {
+      resizeCanvas()
+      syncFrameToScroll()
+      startScrubbing()
+    }
+
+    resizeCanvas()
+    loadFrame(0)
+    preloadAllFrames()
+    observer.observe(scene)
+    window.addEventListener('resize', handleResize)
+    syncFrameToScroll()
+
+    return () => {
+      stopScrubbing()
+      observer.disconnect()
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  return (
+    <div className="vastu-scroll-scene reveal" ref={sceneRef}>
+      <div className="vastu-video-sticky">
+        <canvas
+          ref={canvasRef}
+          className="vastu-scroll-canvas"
+          aria-label="Дом, кадры которого раскрываются по мере прокрутки"
+        />
+      </div>
+    </div>
+  )
+}
 
 const painPoints = [
   'Дом выглядит красивым, но внутри трудно расслабиться.',
@@ -224,12 +455,13 @@ function App() {
         </div>
       </section>
 
-      <section className="section vastuu section-grid" id="method">
-        <div className="section-heading reveal">
+      <section className="section vastuu" id="method">
+        <div className="section-heading section-heading-wide reveal">
           <p className="kicker">Что такое Васту</p>
           <h2>Древняя система, переведенная на язык современного дома</h2>
         </div>
-        <div className="text-column reveal">
+        <ScrollScrubSequence />
+        <div className="text-column vastu-text reveal">
           <p>
             Васту рассматривает пространство как живую структуру: направление
             входа, центр помещения, расположение функций, свет, цвет и плотность

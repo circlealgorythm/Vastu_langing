@@ -489,8 +489,91 @@ details {
 }
 
 .vastuu {
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  display: block;
+}
+
+.section-heading-wide {
+  max-width: none;
+  margin-bottom: clamp(34px, 6vw, 76px);
+}
+
+.section-heading-wide h2 {
+  max-width: 16ch;
+}
+
+.vastu-scroll-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  width: 100vw;
+  height: clamp(1400px, 260svh, 2600px);
+  margin-left: calc(50% - 50vw);
+  margin-bottom: clamp(28px, 5vw, 64px);
+  padding: 0 max(16px, calc((100vw - var(--max)) / 2));
+}
+
+.vastu-scroll-scene::before {
+  content: none;
+}
+
+.vastu-video-sticky {
+  position: sticky;
+  top: clamp(86px, 11svh, 132px);
+  height: min(62svh, 640px);
+  display: grid;
+  place-items: center;
+  transform: translateZ(0);
+}
+
+.vastu-video-sticky::before {
+  content: none;
+}
+
+.vastu-video-sticky::after {
+  content: '';
+  position: absolute;
+  inset: -18% -10%;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(244, 240, 232, 0.08), transparent 28%),
+    radial-gradient(circle at 45% 55%, rgba(220, 193, 120, 0.13), transparent 42%),
+    radial-gradient(circle at 62% 38%, rgba(120, 216, 255, 0.08), transparent 46%);
+  filter: blur(44px);
+  opacity: 0.82;
+}
+
+.vastu-scroll-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  background: transparent;
+  box-shadow:
+    0 38px 120px rgba(0, 0, 0, 0.26),
+    0 0 96px rgba(120, 216, 255, 0.04);
+  backface-visibility: hidden;
+  filter: saturate(0.92) contrast(0.97) brightness(0.92);
+  mask-image:
+    radial-gradient(ellipse at center, #000 0 72%, rgba(0, 0, 0, 0.9) 84%, transparent 98%),
+    linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  mask-composite: intersect;
+  object-fit: cover;
+  opacity: 0.98;
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+.vastu-text {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(22px, 4vw, 64px);
+  max-width: none;
+}
+
+.vastu-text p {
+  max-width: none;
+  margin: 0;
 }
 
 .mechanics-grid {
@@ -836,6 +919,10 @@ details p {
   .package-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .vastu-text {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 680px) {
@@ -876,6 +963,27 @@ details p {
 
   .temple-model {
     height: 430px;
+  }
+
+  .section-heading-wide {
+    margin-bottom: 30px;
+  }
+
+  .vastu-scroll-scene {
+    height: clamp(1040px, 235svh, 1680px);
+    margin-bottom: 14px;
+    padding: 0 12px;
+  }
+
+  .vastu-video-sticky {
+    top: 96px;
+    height: min(46svh, 360px);
+    min-height: 230px;
+  }
+
+  .vastu-scroll-canvas {
+    aspect-ratio: 16 / 9;
+    height: auto;
   }
 
   .hero-metrics,
@@ -929,5 +1037,20 @@ details p {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .vastu-scroll-scene {
+    height: auto;
+  }
+
+  .vastu-video-sticky {
+    position: relative;
+    top: auto;
+    height: auto;
+  }
+
+  .vastu-scroll-canvas {
+    aspect-ratio: 16 / 9;
+    height: auto;
   }
 }

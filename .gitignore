@@ -3,3 +3,4 @@
 node_modules/
 dist/
 .vite-dev.*.log
+public/house-frames/test-*.jpg
