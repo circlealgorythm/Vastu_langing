@@ -159,28 +159,6 @@ function App() {
             уважением к эстетике и вниманием к тому, как вы себя чувствуете
             внутри.
           </p>
-          <div className="hero-actions" aria-label="Основные действия">
-            <a className="button button-primary" href="#consultation">
-              Получить разбор
-            </a>
-            <a className="button button-ghost" href="#method">
-              Посмотреть метод
-            </a>
-          </div>
-          <dl className="hero-metrics">
-            <div>
-              <dt>9</dt>
-              <dd>секторов анализа</dd>
-            </div>
-            <div>
-              <dt>72ч</dt>
-              <dd>до первой карты</dd>
-            </div>
-            <div>
-              <dt>0</dt>
-              <dd>давления и обещаний</dd>
-            </div>
-          </dl>
         </div>
 
         <div className="hero-stage reveal is-visible" aria-label="3D модель храма">
@@ -203,6 +181,31 @@ function App() {
             exposure="0.9"
             loading="eager"
           />
+        </div>
+
+        <div className="hero-bottom reveal is-visible">
+          <div className="hero-actions" aria-label="Основные действия">
+            <a className="button button-primary" href="#consultation">
+              Получить разбор
+            </a>
+            <a className="button button-ghost" href="#method">
+              Посмотреть метод
+            </a>
+          </div>
+          <dl className="hero-metrics">
+            <div>
+              <dt>9</dt>
+              <dd>секторов анализа</dd>
+            </div>
+            <div>
+              <dt>72ч</dt>
+              <dd>до первой карты</dd>
+            </div>
+            <div>
+              <dt>0</dt>
+              <dd>давления и обещаний</dd>
+            </div>
+          </dl>
         </div>
       </section>
 

@@ -109,16 +109,43 @@ a {
 
 .nav {
   position: sticky;
-  top: 0;
+  top: 12px;
   z-index: 20;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 24px;
-  width: min(calc(100% - 32px), var(--max));
-  margin: 0 auto;
-  padding: 18px 0;
-  backdrop-filter: blur(22px);
+  width: min(calc(100% - 24px), calc(var(--max) + 28px));
+  margin: 0 auto 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(244, 240, 232, 0.13);
+  border-radius: 8px;
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.045) 42%, rgba(120, 216, 255, 0.075)),
+    rgba(9, 12, 16, 0.58);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.19),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(28px) saturate(145%);
+  -webkit-backdrop-filter: blur(28px) saturate(145%);
+}
+
+.nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(220, 193, 120, 0.18), transparent 28%),
+    radial-gradient(circle at 88% 10%, rgba(120, 216, 255, 0.16), transparent 30%);
+  opacity: 0.86;
+}
+
+.nav > * {
+  position: relative;
+  z-index: 1;
 }
 
 .brand {
@@ -137,9 +164,10 @@ a {
   align-items: center;
   gap: clamp(14px, 2.6vw, 34px);
   padding: 10px 16px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(244, 240, 232, 0.12);
   border-radius: 999px;
-  background: rgba(10, 12, 16, 0.58);
+  background: rgba(5, 7, 10, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
@@ -165,10 +193,15 @@ a {
   padding: 0 16px;
   border: 1px solid rgba(220, 193, 120, 0.36);
   border-radius: 999px;
-  background: rgba(220, 193, 120, 0.08);
+  background:
+    linear-gradient(135deg, rgba(220, 193, 120, 0.16), rgba(120, 216, 255, 0.08)),
+    rgba(255, 255, 255, 0.045);
   color: var(--text);
   font-size: 13px;
   font-weight: 700;
+  box-shadow:
+    0 12px 34px rgba(220, 193, 120, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .section,
@@ -192,7 +225,20 @@ a {
 
 .hero {
   min-height: calc(100svh - 78px);
+  grid-template-areas:
+    'copy stage'
+    'bottom stage';
+  grid-template-rows: auto 1fr;
   padding: clamp(36px, 6vw, 70px) 0 clamp(70px, 9vw, 112px);
+}
+
+.hero-copy {
+  grid-area: copy;
+}
+
+.hero-bottom {
+  grid-area: bottom;
+  align-self: start;
 }
 
 .kicker {
@@ -319,6 +365,7 @@ p {
 }
 
 .hero-stage {
+  grid-area: stage;
   position: relative;
   min-height: clamp(430px, 56vw, 690px);
   display: grid;
@@ -773,10 +820,14 @@ details p {
 
   .hero {
     min-height: auto;
+    grid-template-areas:
+      'copy'
+      'stage'
+      'bottom';
+    grid-template-rows: auto;
   }
 
   .hero-stage {
-    order: -1;
     min-height: 500px;
   }
 
@@ -794,8 +845,11 @@ details p {
   }
 
   .nav {
-    width: min(calc(100% - 24px), var(--max));
-    padding: 12px 0;
+    top: 8px;
+    width: min(calc(100% - 16px), var(--max));
+    margin-bottom: 8px;
+    padding: 12px 8px;
+    gap: 14px;
   }
 
   .brand {
